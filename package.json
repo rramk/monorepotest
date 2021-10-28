@@ -1,6 +1,6 @@
 {
   "name": "rramk-monorepotest-test",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Test monorepo with workspaces",
   "main": "index.js",
   "scripts": {
@@ -11,9 +11,9 @@
     "url": "git+https://github.com/rramk/monorepotest.git"
   },
   "exports": {
-    ".": {
-      "require": {
-        "foo": "./packages/foo"
+    "./foo": {
+      "node": {
+        "require": "./packages/foo"
       }
     }
   },
