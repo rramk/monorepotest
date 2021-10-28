@@ -1,6 +1,7 @@
 {
   "name": "rramk-monorepotest-test",
-  "version": "1.0.6",
+  "version": "1.0.7",
+  "main": "index.js",
   "description": "Test monorepo with workspaces",
   "scripts": {
     "test": "echo \"no tests included\""
