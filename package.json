@@ -11,7 +11,11 @@
     "url": "git+https://github.com/rramk/monorepotest.git"
   },
   "exports": {
-    "foo": "./packages/foo"
+    ".": {
+      "require": {
+        "foo": "./packages/foo"
+      }
+    }
   },
   "author": "",
   "license": "MIT",
