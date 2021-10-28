@@ -1,5 +1,5 @@
 {
-  "name": "monorepotest",
+  "name": "rramk-monorepotest-test",
   "version": "1.0.0",
   "description": "Test monorepo with workspaces",
   "main": "index.js",
