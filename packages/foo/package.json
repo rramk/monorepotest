@@ -1,0 +1,23 @@
+{
+  "name": "@rramk/foo",
+  "version": "1.0.0",
+  "description": "a foo workspace",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No tests\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rramk/monorepotest.git",
+    "directory": "packages/foo"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rramk/monorepotest/issues"
+  },
+  "homepage": "https://github.com/rramk/monorepotest#readme",
+  "devDependencies": {
+    "eslint": "^8.1.0"
+  }
+}

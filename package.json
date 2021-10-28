@@ -1,0 +1,22 @@
+{
+  "name": "monorepotest",
+  "version": "1.0.0",
+  "description": "Test monorepo with workspaces",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"no tests included\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rramk/monorepotest.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rramk/monorepotest/issues"
+  },
+  "homepage": "https://github.com/rramk/monorepotest#readme",
+  "workspaces": [
+    "packages/*"
+  ]
+}
