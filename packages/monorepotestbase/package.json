@@ -1,0 +1,26 @@
+{
+  "name": "monorepotestbase",
+  "version": "1.0.0",
+  "description": "Monorepo from packages test",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "test": "echo \"No test specified\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rramk/monorepotest.git"
+  },
+  "author": "raghuram",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rramk/monorepotest/issues"
+  },
+  "homepage": "https://github.com/rramk/monorepotest#readme",
+  "dependencies": {
+    "@rramk/foo": "1.0.0"
+  }
+}
