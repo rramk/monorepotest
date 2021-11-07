@@ -1,4 +1,4 @@
-const foo = require('foo');
+const foo = require('@rramk/foo');
 
 Object.defineProperty(exports, 'foo', {
   enumerable: true,
