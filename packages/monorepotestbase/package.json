@@ -1,6 +1,6 @@
 {
   "name": "monorepotestbase",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Monorepo from packages test",
   "main": "index.js",
   "exports": {
