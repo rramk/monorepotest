@@ -1,11 +1,16 @@
 {
   "name": "monorepotestbase",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Monorepo from packages test",
   "main": "index.js",
   "exports": {
     ".": "./index.js",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./foo": {
+      "node": {
+        "require": "./foo/index.js"
+      }
+    }
   },
   "scripts": {
     "test": "echo \"No test specified\""
