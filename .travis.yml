@@ -1,9 +1,8 @@
 language: node_js
 node_js:
 - '16'
-script:
-- npm run docs -w ./packages/foo
 before_deploy:
+- cd ./packages/foo && npm i && npm run docs && cd -
 - ls -alrth ${TRAVIS_BUILD_DIR}/packages/foo
 - PAGES_USER="rramk"
 - PAGES_REPO="rramtravisghtest"
