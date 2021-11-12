@@ -14,7 +14,7 @@ before_deploy:
 - git clone git://${GH_REPO}
 - cd ${PAGES_REPO}
 - git checkout ${PAGES_BRANCH} || git checkout -b ${PAGES_BRANCH}
-- DOC_TARGET_FOLDER="public/docs"
+- DOC_TARGET_FOLDER="public/"
 - mkdir -p ${DOC_TARGET_FOLDER}
 - "\\cp -R ${TRAVIS_BUILD_DIR}/packages/foo/docs/ ${DOC_TARGET_FOLDER}"
 - git config user.email "raghu4u449@gmail.com"
