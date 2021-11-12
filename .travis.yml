@@ -4,6 +4,8 @@ node_js:
 script:
 - npm run docs -w ./packages/foo
 before_deploy:
+- ls -alrth ${TRAVIS_BUILD_DIR}
+- npm run docs -w ./packages/foo
 - PAGES_USER="rramk"
 - PAGES_REPO="rramtravisghtest"
 - PAGES_BRANCH="main"
