@@ -4,8 +4,7 @@ node_js:
 script:
 - npm run docs -w ./packages/foo
 before_deploy:
-- ls -alrth ${TRAVIS_BUILD_DIR}
-- npm run docs -w ./packages/foo
+- ls -alrth ${TRAVIS_BUILD_DIR}/packages/foo
 - PAGES_USER="rramk"
 - PAGES_REPO="rramtravisghtest"
 - PAGES_BRANCH="main"
@@ -17,7 +16,7 @@ before_deploy:
 - git checkout ${PAGES_BRANCH} || git checkout -b ${PAGES_BRANCH}
 - DOC_TARGET_FOLDER="public/docs"
 - mkdir -p ${DOC_TARGET_FOLDER}
-- "\\cp -R ${TRAVIS_BUILD_DIR}/foo/docs/ ${DOC_TARGET_FOLDER}"
+- "\\cp -R ${TRAVIS_BUILD_DIR}/packages/foo/docs/ ${DOC_TARGET_FOLDER}"
 - git config user.email "raghu4u449@gmail.com"
 - git config user.name "rramk"
 - git add -A
