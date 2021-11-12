@@ -1,0 +1,32 @@
+language: node_js
+node_js:
+- '16'
+script:
+- npm run docs -w ./packages/foo
+before_deploy:
+- PAGES_USER="rramk"
+- PAGES_REPO="rramtravisghtest"
+- PAGES_BRANCH="main"
+- GH_REPO="github.com/${PAGES_USER}/${PAGES_REPO}.git"
+- MESSAGE=$(git log --format=%B -n 1 $TRAVIS_COMMIT)
+- cd ${HOME}
+- git clone git://${GH_REPO}
+- cd ${PAGES_REPO}
+- git checkout ${PAGES_BRANCH} || git checkout -b ${PAGES_BRANCH}
+- DOC_TARGET_FOLDER="public/docs"
+- mkdir -p ${DOC_TARGET_FOLDER}
+- "\\cp -R ${TRAVIS_BUILD_DIR}/foo/docs/ ${DOC_TARGET_FOLDER}"
+- git config user.email "raghu4u449@gmail.com"
+- git config user.name "rramk"
+- git add -A
+- git diff-index --quiet HEAD || git commit -m "${MESSAGE}"
+- git push -u https://${GITHUB_IO_TOKEN}@github.com/rramk/rramtravisghtest
+deploy:
+  provider: script
+  skip-cleanup: true
+  script: echo "Github docs push successful"
+  on:
+    branch: main
+env:
+  global:
+    secure: HB/TMc9Gnioe7eJlDRUA/Qsdu/xwlT57bkPHsoUiiDvy/pmCpu3pPh37ITN2vLmx5Xscr8EIxDJLj3xiVk+PLPfIvH7ojSLcIQottvXL2ZY6p+GOrGsEcHsRFkfEWsZ7uIRzmoEigw/mzpR7+BnTVwri0v53eBv1c9e8YxW7IDcx2099wn0ufcMj54s3Buceng1+KlfW0sAEOHrwswKNMN0EwXLjYZwdIJDD+Nwx9fUVX3KPPsVTHGxh5zGKse7DtxlRObZCKsFNxAUxPu7O8e9SV3o7WZKuIYkv5F5adIZKArdR9Vy0AG7PyS7fmuDph1HnSwzndGPLuaBzcWaFY1sRYy6y/NdS8N6uU1Rs9JYUPeUe7RcR6dbMv6SyMy/NHRhxq9F+G39/2gavVbLR1DsPuHNu47DaXan01gr10Dx17p5doOPTe4jepu6UEg/+5bYyztJ+G2aDz1QQ6+PfG0Ya3Dli2Cj07R+1TyJ3bSvR/+rKlAWzcexVJQIC6//j1KxgJnKZDWafLfn+MZjcIg7FsysPz3oV1t5mhUW4dfF1a1+9TstqSbnn3oqTw2JCBLtj668DYcsfYQ8V0h1GM2kRba8My0TJsSHbx603lRkZXWax7i+eOjfaamwPF9WQvnyuJh/WIwY1Y9zJ5fvb3bZ39g89tnUAk1ewDa7yQak=
