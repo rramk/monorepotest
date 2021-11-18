@@ -3,7 +3,7 @@
 /**
  * @description echo function
  * @param {array} variable args
- * @return {void}
+ * @return {void} return nothing
  */
 function echo(...args) {
   console.log(`Hello ${args}`);
