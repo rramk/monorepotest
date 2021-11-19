@@ -28,6 +28,7 @@ cd ${DESTINATION_ROOT}
 git config -l | grep 'http\..*\.extraheader' | cut -d= -f1 | xargs -L1 git config --unset-all
 git config user.email "raghu4u449@gmail.com"
 git config user.name "rramk"
+git pull
 git add -A
 git diff-index --quiet HEAD || git commit -m "${MESSAGE}"
 git push -u https://${PAGES_USER}:${GH_PAGES_TOKEN}@github.com/${PAGES_USER}/${PAGES_REPO}
