@@ -15,11 +15,13 @@ echo SOURCE_ROOT=${SOURCE_ROOT}
 
 # generate privacy sdk docs
 MODULE=foo
-rm -rf "${DESTINATION_ROOT}/public"
 DOC_TARGET_FOLDER="${DESTINATION_ROOT}/docs"
 mkdir -p "${DOC_TARGET_FOLDER}"
 cd "${SOURCE_ROOT}/packages/${MODULE}" && npm i && npm run docs && cd -
 cp -R "${SOURCE_ROOT}/packages/${MODULE}/docs/." "${DOC_TARGET_FOLDER}/"
+
+ls -al ${DESTINATION_ROOT}
+ls -al ${DESTINATION_ROOT}/docs
 
 # configure and push to github docs repo
 cd ${SOURCE_ROOT}
