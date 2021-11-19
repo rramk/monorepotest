@@ -35,5 +35,5 @@ git config user.name "rramk"
 
 git add -A
 git diff-index --quiet HEAD || git commit -m "${MESSAGE}"
-git push -u https://${PAGES_USER}:${GH_PAGES_TOKEN}@github.com/rramk/rramtravisghtest
+git push
 
