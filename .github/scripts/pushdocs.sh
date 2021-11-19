@@ -2,12 +2,15 @@
 
 pwd
 ls ${GITHUB_WORKSPACE}
-cd ${GITHUB_WORKSPACE}/monorepo/packages/foo && npm i && npm run docs && cd -
+cd ${GITHUB_WORKSPACE}/monorepo
+cd ./packages/foo && npm i && npm run docs && cd -
 PAGES_USER="rramk"
 PAGES_REPO="rramtravisghtest"
 PAGES_BRANCH="main"
 GH_REPO="github.com/${PAGES_USER}/${PAGES_REPO}.git"
+echo "message eval"
 MESSAGE=`git log --format=%B -n 1`
+echo "message result"
 echo "${MESSAGE}"
 cd ${RUNNER_TEMP}
 git clone git://${GH_REPO}
