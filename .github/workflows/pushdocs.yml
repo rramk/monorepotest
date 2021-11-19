@@ -41,6 +41,6 @@ jobs:
           node-version: '16'
 
       - name: publish docs
-        run: bash ${{ github.workspace }}/monorepo.github/scripts/pushdocs.sh
+        run: bash ${{ github.workspace }}/monorepo/.github/scripts/pushdocs.sh
 
 
