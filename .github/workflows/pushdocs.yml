@@ -25,22 +25,7 @@ jobs:
         with:
           path: docs
 
-      - name: debug path
-        run: |
-          ls -al ${GITHUB_WORKSPACE}/monorepo/.github/scripts
-
-      - run: echo ${{ env.GITHUB_WORKSPACE }}
-
-      - run: echo ${{ env }}
-
-      - run: ls -al ${{ github.workspace }}
-
-      - name: Checkout docs repo
-        uses: actions/checkout@v2
-        with:
-          path: docs
-
-      - name: install node/npm
+      - name: Install npm
         uses: actions/setup-node@v2
         with:
           node-version: '16'

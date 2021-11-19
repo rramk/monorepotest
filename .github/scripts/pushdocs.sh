@@ -1,40 +1,26 @@
 #!/bin/bash
 
-pwd
-ls ${GITHUB_WORKSPACE}
-cd ${GITHUB_WORKSPACE}/monorepo
-cd ./packages/foo && npm i && npm run docs && cd -
 PAGES_USER="rramk"
 PAGES_REPO="rramtravisghtest"
 PAGES_BRANCH="main"
 GH_REPO="github.com/${PAGES_USER}/${PAGES_REPO}.git"
-echo "message eval"
+DESTINATION_ROOT="${GITHUB_WORKSPACE}/docs"
+SOURCE_ROOT= "${GITHUB_WORKSPACE}/monorepo"
+
+# generate privacy sdk docs
+MODULE=foo
+rm -rf "${DESTINATION_ROOT}/public"
+DOC_TARGET_FOLDER="${DESTINATION_ROOT}/docs"
+mkdir -p "${DOC_TARGET_FOLDER}"
+cd ${SOURCE_ROOT}/packages/${MODULE} && npm i && npm run docs && cd -
+cp -R ${SOURCE_ROOT}/packages/${MODULE}/docs/. ${DOC_TARGET_FOLDER}/
+
+# configure and push to github docs repo
+cd ${SOURCE_ROOT}
 MESSAGE=`git log --format=%B -n 1`
-echo "message result"
-echo "${MESSAGE}"
-cd ${RUNNER_TEMP}
-git clone git://${GH_REPO}
-cd ${PAGES_REPO}
-git checkout ${PAGES_BRANCH} || git checkout -b ${PAGES_BRANCH}
-DOC_TARGET_FOLDER="docs"
-rm -rf ${DOC_TARGET_FOLDER}/*
-mkdir -p ${DOC_TARGET_FOLDER}
-
-pwd
-ls -al
-ls -al ../
-ls -al ../../
-DECRYPTED_TOKEN=`echo ${GH_PAGES_TOKEN} | sed 's/./&/g'`
-
-cp -R ${GITHUB_WORKSPACE}/monorepo/packages/foo/docs/. ${DOC_TARGET_FOLDER}/
-
-
-ls -al ${DOC_TARGET_FOLDER}
-
+cd ${DESTINATION_ROOT}
 git config user.email "raghu4u449@gmail.com"
 git config user.name "rramk"
-
 git add -A
 git diff-index --quiet HEAD || git commit -m "${MESSAGE}"
-git push -u https://${PAGES_USER}:${GH_PAGES_TOKEN}@github.com/rramk/rramtravisghtest
-
+git push -u https://${GH_PAGES_TOKEN}@github.com/${PAGES_USER}/${PAGES_REPO}
