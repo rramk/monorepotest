@@ -2,7 +2,7 @@
 
 /**
  * @description echo function
- * @param {array} variable number of args
+ * @param {array} args variable number of args
  * @return {void}
  */
 function echo(...args) {
