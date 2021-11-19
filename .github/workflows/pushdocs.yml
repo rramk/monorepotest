@@ -20,6 +20,10 @@ jobs:
         with:
           path: monorepo
 
+        run: |
+          ls
+          pwd
+
       - name: Checkout docs repo
         uses: actions/checkout@v2
         with:
