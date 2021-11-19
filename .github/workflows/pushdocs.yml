@@ -1,0 +1,36 @@
+name: Push documentation to pages repo
+
+env:
+  GH_PAGES_TOKEN: ${{ secrets.GH_PAGES_TOKEN }}
+
+on:
+  # Trigger the workflow on push to main
+  push:
+    branches:
+      - main
+
+jobs:
+  docspush:
+    name: Push documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sdk monorepo
+        uses: actions/checkout@v2
+        with:
+          path: monorepo
+
+      - name: Checkout docs repo
+        uses: actions/checkout@v2
+        with:
+          path: docs
+
+      - name: install node/npm
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: publish docs
+        run: bash ./github/scripts/pushdocs.sh
+
+
