@@ -20,9 +20,11 @@ jobs:
         with:
           path: monorepo
 
+      - name: debug path
         run: |
-          ls
+          ls -al .
           pwd
+          ls -al ${GITHUB_WORKSPACE}
 
       - name: Checkout docs repo
         uses: actions/checkout@v2
@@ -35,6 +37,7 @@ jobs:
           node-version: '16'
 
       - name: publish docs
+        working-directory: ${{ env.GITHUB_WORKSPACE }}
         run: bash .github/scripts/pushdocs.sh
 
 
