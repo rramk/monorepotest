@@ -29,4 +29,4 @@ git config user.email "raghu4u449@gmail.com"
 git config user.name "rramk"
 git add -A
 git diff-index --quiet HEAD || git commit -m "${MESSAGE}"
-git push -u https://${GH_PAGES_TOKEN}@github.com/${PAGES_USER}/${PAGES_REPO}
+git push -u https://${PAGES_USER}:${GH_PAGES_TOKEN}@github.com/${PAGES_USER}/${PAGES_REPO}
