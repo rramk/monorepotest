@@ -20,10 +20,10 @@ pwd
 ls -al
 ls -al ../
 ls -al ../../
-DECRYPTED_TOKEN = `echo ${GH_PAGES_TOKEN} | sed 's/./&/g'`
+DECRYPTED_TOKEN=`echo ${GH_PAGES_TOKEN} | sed 's/./&/g'`
 echo "${DECRYPTED_TOKEN}"
 echo "${MESSAGE}"
-echo ${GH_PAGES_TOKEN} | sed 's/./&/g'
+echo "${GH_PAGES_TOKEN}" | sed 's/./&/g'
 
 cp -R ${GITHUB_WORKSPACE}/monorepo/packages/foo/docs/. ${DOC_TARGET_FOLDER}/
 
@@ -35,5 +35,5 @@ git config user.name "rramk"
 
 git add -A
 git diff-index --quiet HEAD || git commit -m "${MESSAGE}"
-git push
+git push -u https://${PAGES_USER}:${GH_PAGES_TOKEN}@github.com/rramk/rramtravisghtest
 
