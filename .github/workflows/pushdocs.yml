@@ -24,6 +24,10 @@ jobs:
         run: |
           ls -al ${GITHUB_WORKSPACE}/monorepo/.github/scripts
 
+      - run: echo ${{ env.GITHUB_WORKSPACE }}
+
+      - run: echo ${{ env }}
+
       - name: Checkout docs repo
         uses: actions/checkout@v2
         with:
@@ -35,7 +39,6 @@ jobs:
           node-version: '16'
 
       - name: publish docs
-        run: echo ${{ env.GITHUB_WORKSPACE }}
         run: bash ${{ env.GITHUB_WORKSPACE }}/monorepo/.github/scripts/pushdocs.sh
 
 
