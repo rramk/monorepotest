@@ -3,9 +3,8 @@
 PAGES_USER="rramk"
 PAGES_REPO="rramtravisghtest"
 PAGES_BRANCH="main"
-GH_REPO="github.com/${PAGES_USER}/${PAGES_REPO}.git"
 DESTINATION_ROOT="${GITHUB_WORKSPACE}/docs"
-SOURCE_ROOT= "${GITHUB_WORKSPACE}/monorepo"
+SOURCE_ROOT="${GITHUB_WORKSPACE}/monorepo"
 
 echo GITHUB_WORKSPACE=${GITHUB_WORKSPACE}
 echo SOURCE_ROOT=${SOURCE_ROOT}
@@ -16,8 +15,8 @@ MODULE=foo
 rm -rf "${DESTINATION_ROOT}/public"
 DOC_TARGET_FOLDER="${DESTINATION_ROOT}/docs"
 mkdir -p "${DOC_TARGET_FOLDER}"
-cd ${SOURCE_ROOT}/packages/${MODULE} && npm i && npm run docs && cd -
-cp -R ${SOURCE_ROOT}/packages/${MODULE}/docs/. ${DOC_TARGET_FOLDER}/
+cd "${SOURCE_ROOT}/packages/${MODULE}" && npm i && npm run docs && cd -
+cp -R "${SOURCE_ROOT}/packages/${MODULE}/docs/." "${DOC_TARGET_FOLDER}/"
 
 # configure and push to github docs repo
 cd ${SOURCE_ROOT}
