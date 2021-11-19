@@ -7,7 +7,8 @@ PAGES_USER="rramk"
 PAGES_REPO="rramtravisghtest"
 PAGES_BRANCH="main"
 GH_REPO="github.com/${PAGES_USER}/${PAGES_REPO}.git"
-MESSAGE=$(git log --format=%B -n 1)
+MESSAGE=`git log --format=%B -n 1`
+echo "${MESSAGE}"
 cd ${RUNNER_TEMP}
 git clone git://${GH_REPO}
 cd ${PAGES_REPO}
@@ -21,9 +22,6 @@ ls -al
 ls -al ../
 ls -al ../../
 DECRYPTED_TOKEN=`echo ${GH_PAGES_TOKEN} | sed 's/./&/g'`
-echo "${DECRYPTED_TOKEN}"
-echo "${MESSAGE}"
-echo "${GH_PAGES_TOKEN}" | sed 's/./&/g'
 
 cp -R ${GITHUB_WORKSPACE}/monorepo/packages/foo/docs/. ${DOC_TARGET_FOLDER}/
 
