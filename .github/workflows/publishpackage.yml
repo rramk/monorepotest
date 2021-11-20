@@ -19,7 +19,7 @@ jobs:
       - run: |
           TAG=${GITHUB_REF:10}
           echo "TAG=$TAG"
-          MODULE=`echo "$TAG" | sed -e 's/@monorepotest\/\([a-zA-Z].*\)@.*$/\1/'`
+          MODULE=`echo "$TAG" | sed -e 's/@rramk\/\([a-zA-Z].*\)@.*$/\1/'`
           cd ${GITHUB_WORKSPACE}/packages/${MODULE}
           pwd
           ls
