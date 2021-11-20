@@ -3,11 +3,14 @@ name: Push documentation to pages repo
 env:
   GH_PAGES_TOKEN: ${{ secrets.GH_PAGES_TOKEN }}
 
+# Trigger the workflow on push to main or when a github release is created
 on:
-  # Trigger the workflow on push to main
   push:
     branches:
       - main
+on:
+  release:
+    types: [created]
 
 jobs:
   docspush:
@@ -24,8 +27,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: rramk/rramtravisghtest
-          # full clone needed in order to push
-          # fetch-depth: 0
           path: docs
 
       - name: Install npm
@@ -33,7 +34,7 @@ jobs:
         with:
           node-version: '16'
 
-      - name: publish docs
+      - name: Push docs
         run: ${{ github.workspace }}/monorepo/.github/scripts/pushdocs.sh
         shell: bash
 

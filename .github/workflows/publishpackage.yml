@@ -1,4 +1,5 @@
-name: Publish package to NPM
+name: Publish packages to NPM
+
 on:
   release:
     types: [created]
@@ -15,6 +16,13 @@ jobs:
         with:
           node-version: '16.x'
           registry-url: 'https://registry.npmjs.org'
-      - run: npm publish
+      - run: |
+          TAG=${GITHUB_REF:10}
+          echo "TAG=$TAG"
+          MODULE=`echo "$TAG" | sed -e 's/@monorepotest\/\([a-zA-Z].*\)@.*$/\1/'`
+          cd ${GITHUB_WORKSPACE}/packages/${MODULE}
+          pwd
+          ls
+          npm publish --dry-run
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
