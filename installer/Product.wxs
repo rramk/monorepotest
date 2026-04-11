@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  WiX v3 installer for an Open Liberty / WebSphere Liberty server package
+  bundled with its own JRE.
+
+  Layout produced on the target machine:
+
+      %ProgramFiles%\<Manufacturer>\<ProductName>\
+          wlp\     <- extracted `server package` archive
+              etc\server.env   (points JAVA_HOME at ..\jre)
+          jre\     <- bundled JRE (NOT added to PATH)
+
+  The JRE is intentionally *not* placed on PATH and no registry
+  JAVA_HOME is written - Liberty reads it from wlp\etc\server.env as a
+  relative path so the install is fully self-contained.
+
+  The Windows service is created / removed by invoking Liberty's own
+  `server.bat registerWinService` and `unregisterWinService` commands
+  from a deferred custom action - we do not emit a ServiceInstall row
+  ourselves, so Liberty remains the single source of truth for how the
+  service is wired up.
+
+  No HTTP firewall rules / ports are opened by this installer.
+-->
+<?define ProductName      = "Liberty Server" ?>
+<?define Manufacturer     = "Example Corp" ?>
+<?define ProductVersion   = "1.0.0" ?>
+<?define UpgradeCode      = "B7D8E4A2-6C3F-4F1A-9B8D-5E7F8A9C0D1E" ?>
+<!-- Server name baked into the packaged wlp\usr\servers\<name> tree.
+     Override at build time with:  candle -dLibertyServerName=myServer  -->
+<?ifndef LibertyServerName ?>
+  <?define LibertyServerName = "defaultServer" ?>
+<?endif?>
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+
+  <Product Id="*"
+           Name="$(var.ProductName)"
+           Language="1033"
+           Version="$(var.ProductVersion)"
+           Manufacturer="$(var.Manufacturer)"
+           UpgradeCode="$(var.UpgradeCode)">
+
+    <Package InstallerVersion="500"
+             Compressed="yes"
+             InstallScope="perMachine"
+             Description="$(var.ProductName) $(var.ProductVersion)"
+             Manufacturer="$(var.Manufacturer)" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- Fail fast on non-admin installs; registering a service needs elevation. -->
+    <Condition Message="Administrator privileges are required to install [ProductName].">
+      Privileged
+    </Condition>
+
+    <!-- ============================================================ -->
+    <!-- Directory layout                                              -->
+    <!-- ============================================================ -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="ManufacturerFolder" Name="$(var.Manufacturer)">
+          <Directory Id="INSTALLFOLDER" Name="$(var.ProductName)">
+            <!-- Populated by heat-generated LibertyComponents -->
+            <Directory Id="LIBERTYDIR" Name="wlp" />
+            <!-- Populated by heat-generated JreComponents -->
+            <Directory Id="JREDIR" Name="jre" />
+          </Directory>
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <!-- ============================================================ -->
+    <!-- Features                                                      -->
+    <!-- ============================================================ -->
+    <Feature Id="Complete"
+             Title="$(var.ProductName)"
+             Level="1"
+             AllowAdvertise="no"
+             ConfigurableDirectory="INSTALLFOLDER">
+      <ComponentGroupRef Id="LibertyComponents" />
+      <ComponentGroupRef Id="JreComponents" />
+    </Feature>
+
+    <!-- ============================================================ -->
+    <!-- Service registration via Liberty's own server command         -->
+    <!--                                                               -->
+    <!-- We use the "set a property with the same name as the deferred -->
+    <!-- CA" pattern so the deferred action can see the resolved       -->
+    <!-- [LIBERTYDIR] at execution time (deferred CAs cannot read      -->
+    <!-- installer properties directly).                               -->
+    <!-- ============================================================ -->
+    <CustomAction Id="SetRegisterWinService"
+                  Property="RegisterWinService"
+                  Value='"[LIBERTYDIR]bin\server.bat" registerWinService $(var.LibertyServerName)'
+                  Execute="immediate" />
+
+    <CustomAction Id="RegisterWinService"
+                  BinaryKey="WixCA"
+                  DllEntry="WixQuietExec"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="check" />
+
+    <CustomAction Id="SetUnregisterWinService"
+                  Property="UnregisterWinService"
+                  Value='"[LIBERTYDIR]bin\server.bat" unregisterWinService $(var.LibertyServerName)'
+                  Execute="immediate" />
+
+    <CustomAction Id="UnregisterWinService"
+                  BinaryKey="WixCA"
+                  DllEntry="WixQuietExec"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+
+    <InstallExecuteSequence>
+      <!-- Register on first install and on major-upgrade install. -->
+      <Custom Action="SetRegisterWinService" After="InstallFiles">
+        NOT Installed OR UPGRADINGPRODUCTCODE
+      </Custom>
+      <Custom Action="RegisterWinService" After="SetRegisterWinService">
+        NOT Installed OR UPGRADINGPRODUCTCODE
+      </Custom>
+
+      <!-- Unregister on uninstall and on the uninstall half of a major
+           upgrade. Schedule before RemoveFiles so server.bat still exists. -->
+      <Custom Action="SetUnregisterWinService" Before="RemoveFiles">
+        (REMOVE="ALL") OR (WIX_UPGRADE_DETECTED AND NOT UPGRADINGPRODUCTCODE)
+      </Custom>
+      <Custom Action="UnregisterWinService" After="SetUnregisterWinService">
+        (REMOVE="ALL") OR (WIX_UPGRADE_DETECTED AND NOT UPGRADINGPRODUCTCODE)
+      </Custom>
+    </InstallExecuteSequence>
+
+  </Product>
+</Wix>

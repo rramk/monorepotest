@@ -1,0 +1,4 @@
+# Payloads staged for the WiX build - these are large and not committed.
+staging/
+# candle/light output
+build/
