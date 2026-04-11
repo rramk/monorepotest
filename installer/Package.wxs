@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  WiX v4 installer for an Open Liberty / WebSphere Liberty server package
+  bundled with its own JRE.
+
+  Layout produced on the target machine:
+
+      %ProgramFiles%\<Manufacturer>\<ProductName>\
+          wlp\     <- extracted `server package` archive
+              etc\server.env   (points JAVA_HOME at ..\jre)
+          jre\     <- bundled JRE (NOT added to PATH)
+
+  The JRE is intentionally *not* placed on PATH and no registry
+  JAVA_HOME is written - Liberty reads it from wlp\etc\server.env as a
+  relative path so the install is fully self-contained.
+
+  The Windows service is created / removed by invoking Liberty's own
+  `server.bat registerWinService` and `unregisterWinService` commands
+  from a deferred custom action - we do not emit a ServiceInstall row
+  ourselves, so Liberty remains the single source of truth for how the
+  service is wired up.
+
+  No HTTP firewall rules / ports are opened by this installer.
+
+  Build with:
+      wix build -arch x64 -ext WixToolset.Util.wixext
+                -bindpath LibertySource=staging\wlp
+                -bindpath JreSource=staging\jre
+                -out build\LibertyServer.msi Package.wxs
+-->
+<?define ProductName    = "Liberty Server" ?>
+<?define Manufacturer   = "Example Corp" ?>
+<?define ProductVersion = "1.0.0" ?>
+<?define UpgradeCode    = "B7D8E4A2-6C3F-4F1A-9B8D-5E7F8A9C0D1E" ?>
+<!-- Server name baked into the packaged wlp\usr\servers\<name> tree.
+     Override at build time with:  wix build -d LibertyServerName=myServer  -->
+<?ifndef LibertyServerName ?>
+  <?define LibertyServerName = "defaultServer" ?>
+<?endif?>
+
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+
+  <Package Name="$(var.ProductName)"
+           Manufacturer="$(var.Manufacturer)"
+           Version="$(var.ProductVersion)"
+           UpgradeCode="$(var.UpgradeCode)"
+           Scope="perMachine"
+           Compressed="yes"
+           InstallerVersion="500">
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- Fail fast on non-admin installs; registering a service needs elevation. -->
+    <Launch Condition="Privileged"
+            Message="Administrator privileges are required to install [ProductName]." />
+
+    <!-- ============================================================ -->
+    <!-- Directory layout                                              -->
+    <!-- ============================================================ -->
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="ManufacturerFolder" Name="$(var.Manufacturer)">
+        <Directory Id="INSTALLFOLDER" Name="$(var.ProductName)">
+          <!-- Populated by LibertyComponents (see Fragment below) -->
+          <Directory Id="LIBERTYDIR" Name="wlp" />
+          <!-- Populated by JreComponents (see Fragment below) -->
+          <Directory Id="JREDIR" Name="jre" />
+        </Directory>
+      </Directory>
+    </StandardDirectory>
+
+    <!-- ============================================================ -->
+    <!-- Features                                                      -->
+    <!-- ============================================================ -->
+    <Feature Id="Complete"
+             Title="$(var.ProductName)"
+             Level="1"
+             AllowAdvertise="no"
+             ConfigurableDirectory="INSTALLFOLDER">
+      <ComponentGroupRef Id="LibertyComponents" />
+      <ComponentGroupRef Id="JreComponents" />
+    </Feature>
+
+    <!-- ============================================================ -->
+    <!-- Service registration via Liberty's own server command         -->
+    <!--                                                               -->
+    <!-- SetProperty writes a property whose name matches the deferred -->
+    <!-- CA; the util extension's WixQuietExec64 reads that property   -->
+    <!-- at runtime (deferred CAs cannot read installer properties     -->
+    <!-- directly).                                                    -->
+    <!-- ============================================================ -->
+    <SetProperty Id="RegisterWinService"
+                 Value='"[LIBERTYDIR]bin\server.bat" registerWinService $(var.LibertyServerName)'
+                 Before="RegisterWinService"
+                 Sequence="execute" />
+
+    <CustomAction Id="RegisterWinService"
+                  BinaryRef="Wix4UtilCA_X64"
+                  DllEntry="WixQuietExec64"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="check" />
+
+    <SetProperty Id="UnregisterWinService"
+                 Value='"[LIBERTYDIR]bin\server.bat" unregisterWinService $(var.LibertyServerName)'
+                 Before="UnregisterWinService"
+                 Sequence="execute" />
+
+    <CustomAction Id="UnregisterWinService"
+                  BinaryRef="Wix4UtilCA_X64"
+                  DllEntry="WixQuietExec64"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+
+    <InstallExecuteSequence>
+      <!-- Register on first install and on the install half of a major upgrade. -->
+      <Custom Action="RegisterWinService" After="InstallFiles"
+              Condition="NOT Installed OR UPGRADINGPRODUCTCODE" />
+
+      <!-- Unregister on uninstall and on the uninstall half of a major upgrade.
+           Scheduled before RemoveFiles so server.bat is still on disk. -->
+      <Custom Action="UnregisterWinService" Before="RemoveFiles"
+              Condition='(REMOVE="ALL") OR (WIX_UPGRADE_DETECTED AND NOT UPGRADINGPRODUCTCODE)' />
+    </InstallExecuteSequence>
+
+  </Package>
+
+  <!-- ============================================================ -->
+  <!-- Harvested payloads                                            -->
+  <!--                                                               -->
+  <!-- WiX v4's <Files Include="..."/> element replaces heat: it     -->
+  <!-- expands at build time into one Component per file under the  -->
+  <!-- bindpath root and attaches them to the named Directory.      -->
+  <!-- ============================================================ -->
+  <Fragment>
+    <ComponentGroup Id="LibertyComponents" Directory="LIBERTYDIR">
+      <Files Include="!(bindpath.LibertySource)\**" />
+    </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="JreComponents" Directory="JREDIR">
+      <Files Include="!(bindpath.JreSource)\**" />
+    </ComponentGroup>
+  </Fragment>
+
+</Wix>
