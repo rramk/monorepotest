@@ -75,9 +75,11 @@ candle -nologo -arch x64 ^
 echo [light]  linking...
 light -nologo ^
     -ext WixUtilExtension ^
+    -ext WixUIExtension ^
     -sice:ICE60 ^
     -b "%STAGING%\wlp" ^
     -b "%STAGING%\jre" ^
+    -b "%SCRIPT_DIR%" ^
     -out "%BUILD%\LibertyServer.msi" ^
     "%BUILD%\Product.wixobj" ^
     "%BUILD%\Liberty.wixobj" ^

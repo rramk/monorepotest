@@ -85,6 +85,20 @@
     </Feature>
 
     <!-- ============================================================ -->
+    <!-- User interface                                                -->
+    <!--                                                               -->
+    <!-- WixUI_InstallDir adds the standard "Choose install folder"    -->
+    <!-- dialog (with a Change... button) to the install sequence.     -->
+    <!-- The WIXUI_INSTALLDIR property tells WixUI which Directory Id  -->
+    <!-- the dialog should bind to - it MUST match the Id of the       -->
+    <!-- directory we want editable (INSTALLFOLDER above).             -->
+    <!-- Requires linking with  -ext WixUIExtension                    -->
+    <!-- ============================================================ -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <UIRef Id="WixUI_InstallDir" />
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+
+    <!-- ============================================================ -->
     <!-- Service registration via Liberty's own server command         -->
     <!--                                                               -->
     <!-- We use the "set a property with the same name as the deferred -->
