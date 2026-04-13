@@ -36,10 +36,19 @@ if not exist "%STAGING%\jre\bin\java.exe" (
 if not exist "%BUILD%" mkdir "%BUILD%"
 
 rem -- Drop our server.env on top of the Liberty payload so heat harvests it.
+rem    Extracted zips often carry the read-only attribute, which causes
+rem    copy /Y to fail silently.  Strip it first.
 if not exist "%STAGING%\wlp\etc" mkdir "%STAGING%\wlp\etc"
+if exist "%STAGING%\wlp\etc\server.env" attrib -R "%STAGING%\wlp\etc\server.env"
 copy /Y "%SCRIPT_DIR%server.env" "%STAGING%\wlp\etc\server.env" >nul
 if errorlevel 1 (
     echo [ERROR] Failed to stage server.env into %STAGING%\wlp\etc\server.env
+    exit /b 1
+)
+rem -- Verify our JAVA_HOME line actually landed in the staged copy.
+findstr /C:"JAVA_HOME" "%STAGING%\wlp\etc\server.env" >nul
+if errorlevel 1 (
+    echo [ERROR] server.env was staged but does not contain JAVA_HOME.
     exit /b 1
 )
 
