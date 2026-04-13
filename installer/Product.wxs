@@ -6,30 +6,30 @@
   Layout produced on the target machine:
 
       %ProgramFiles%\<Manufacturer>\<ProductName>\
-          wlp\     <- extracted `server package` archive
-              etc\server.env   (points JAVA_HOME at ..\jre)
-          jre\     <- bundled JRE (NOT added to PATH)
+          wlp\
+              etc\server.env            (JAVA_HOME=..\jre)
+              etc\configure.bat         (writes bootstrap.properties)
+              usr\servers\<name>\
+                  server.xml            (uses ${variable} placeholders)
+                  bootstrap.properties  (written at install time by CA)
+          jre\                          (private JRE, NOT on PATH)
 
-  The JRE is intentionally *not* placed on PATH and no registry
-  JAVA_HOME is written - Liberty reads it from wlp\etc\server.env as a
-  relative path so the install is fully self-contained.
-
-  The Windows service is created / removed by invoking Liberty's own
-  `server.bat registerWinService` and `unregisterWinService` commands
-  from a deferred custom action - we do not emit a ServiceInstall row
-  ourselves, so Liberty remains the single source of truth for how the
-  service is wired up.
-
-  No HTTP firewall rules / ports are opened by this installer.
+  Silent install example:
+      msiexec /i LibertyServer.msi /quiet ^
+          INSTALLFOLDER="D:\Liberty" ^
+          DB_HOST=db.example.com DB_PORT=50000 ^
+          DB_USER=appuser DB_PASSWORD=s3cret ^
+          SERVICE_DISPLAY_NAME="My App Server"
 -->
 <?define ProductName      = "Liberty Server" ?>
 <?define Manufacturer     = "Example Corp" ?>
 <?define ProductVersion   = "1.0.0" ?>
 <?define UpgradeCode      = "B7D8E4A2-6C3F-4F1A-9B8D-5E7F8A9C0D1E" ?>
-<!-- Server name baked into the packaged wlp\usr\servers\<name> tree.
-     Override at build time with:  candle -dLibertyServerName=myServer  -->
 <?ifndef LibertyServerName ?>
   <?define LibertyServerName = "defaultServer" ?>
+<?endif?>
+<?ifndef ServiceDisplayName ?>
+  <?define ServiceDisplayName = "Liberty Application Server" ?>
 <?endif?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
@@ -57,6 +57,21 @@
     </Condition>
 
     <!-- ============================================================ -->
+    <!-- Public properties                                             -->
+    <!--                                                               -->
+    <!-- All uppercase + Secure="yes" so they can be overridden on the -->
+    <!-- msiexec command line for silent/unattended installs.          -->
+    <!-- Hidden="yes" on DB_PASSWORD keeps it out of the MSI log.     -->
+    <!--                                                               -->
+    <!--   msiexec /i LibertyServer.msi /quiet DB_HOST=mydb ...       -->
+    <!-- ============================================================ -->
+    <Property Id="DB_HOST"     Value="localhost" Secure="yes" />
+    <Property Id="DB_PORT"     Value="50000"     Secure="yes" />
+    <Property Id="DB_USER"     Value="dbuser"    Secure="yes" />
+    <Property Id="DB_PASSWORD" Value=""           Secure="yes" Hidden="yes" />
+    <Property Id="SERVICE_DISPLAY_NAME" Value="$(var.ServiceDisplayName)" Secure="yes" />
+
+    <!-- ============================================================ -->
     <!-- Directory layout                                              -->
     <!-- ============================================================ -->
     <Directory Id="TARGETDIR" Name="SourceDir">
@@ -82,16 +97,30 @@
              ConfigurableDirectory="INSTALLFOLDER">
       <ComponentGroupRef Id="LibertyComponents" />
       <ComponentGroupRef Id="JreComponents" />
+      <ComponentRef Id="CleanupOnUninstall" />
     </Feature>
+
+    <!-- ============================================================ -->
+    <!-- Cleanup component                                             -->
+    <!--                                                               -->
+    <!-- bootstrap.properties is written by a CA (not the File table), -->
+    <!-- so RemoveFiles won't touch it.  RemoveFolderEx ensures the    -->
+    <!-- entire install tree is cleaned up on uninstall.               -->
+    <!-- ============================================================ -->
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="CleanupOnUninstall" Guid="E4F5A6B7-C8D9-4E0F-A1B2-C3D4E5F6A7B8">
+        <CreateFolder />
+        <util:RemoveFolderEx On="uninstall" Property="INSTALLFOLDER" />
+      </Component>
+    </DirectoryRef>
 
     <!-- ============================================================ -->
     <!-- User interface                                                -->
     <!--                                                               -->
     <!-- WixUI_InstallDir adds the standard "Choose install folder"    -->
-    <!-- dialog (with a Change... button) to the install sequence.     -->
-    <!-- The WIXUI_INSTALLDIR property tells WixUI which Directory Id  -->
-    <!-- the dialog should bind to - it MUST match the Id of the       -->
-    <!-- directory we want editable (INSTALLFOLDER above).             -->
+    <!-- dialog (with a Change... button).  In silent mode (/quiet)    -->
+    <!-- the UI is skipped entirely; INSTALLFOLDER defaults to the     -->
+    <!-- ProgramFiles path unless overridden on the command line.      -->
     <!-- Requires linking with  -ext WixUIExtension                    -->
     <!-- ============================================================ -->
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
@@ -99,13 +128,32 @@
     <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
 
     <!-- ============================================================ -->
-    <!-- Service registration via Liberty's own server command         -->
+    <!-- Custom actions                                                -->
     <!--                                                               -->
-    <!-- We use the "set a property with the same name as the deferred -->
-    <!-- CA" pattern so the deferred action can see the resolved       -->
-    <!-- [LIBERTYDIR] at execution time (deferred CAs cannot read      -->
-    <!-- installer properties directly).                               -->
+    <!-- Pattern: an immediate SetProperty resolves [PROPERTY] values  -->
+    <!-- into a command string, then a deferred WixQuietExec runs it   -->
+    <!-- under SYSTEM.  This is the only way to pass runtime values    -->
+    <!-- into a deferred (elevated) CA.                                -->
     <!-- ============================================================ -->
+
+    <!-- 1. Write bootstrap.properties with the DB properties.         -->
+    <!--    configure.bat lives at wlp\etc\configure.bat (staged by    -->
+    <!--    build.bat, harvested by heat).  It writes key=value lines  -->
+    <!--    into usr\servers\<name>\bootstrap.properties so Liberty's   -->
+    <!--    ${variable} substitution in server.xml picks them up.      -->
+    <CustomAction Id="SetWriteBootstrapProps"
+                  Property="WriteBootstrapProps"
+                  Value='"[LIBERTYDIR]etc\configure.bat" "[LIBERTYDIR]usr\servers\$(var.LibertyServerName)" "[DB_HOST]" "[DB_PORT]" "[DB_USER]" "[DB_PASSWORD]"'
+                  Execute="immediate" />
+
+    <CustomAction Id="WriteBootstrapProps"
+                  BinaryKey="WixCA"
+                  DllEntry="WixQuietExec"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="check" />
+
+    <!-- 2. Register the Windows service via Liberty's own command.     -->
     <CustomAction Id="SetRegisterWinService"
                   Property="RegisterWinService"
                   Value='"[LIBERTYDIR]bin\server.bat" registerWinService $(var.LibertyServerName)'
@@ -118,6 +166,22 @@
                   Impersonate="no"
                   Return="check" />
 
+    <!-- 3. Set service display name and startup type to Automatic.    -->
+    <!--    Runs after registerWinService has created the service.      -->
+    <!--    Note: sc.exe requires a space AFTER each "key= " token.    -->
+    <CustomAction Id="SetConfigureWinService"
+                  Property="ConfigureWinService"
+                  Value='sc config $(var.LibertyServerName) DisplayName= "[SERVICE_DISPLAY_NAME]" start= auto'
+                  Execute="immediate" />
+
+    <CustomAction Id="ConfigureWinService"
+                  BinaryKey="WixCA"
+                  DllEntry="WixQuietExec"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="check" />
+
+    <!-- 4. Unregister the Windows service on uninstall.               -->
     <CustomAction Id="SetUnregisterWinService"
                   Property="UnregisterWinService"
                   Value='"[LIBERTYDIR]bin\server.bat" unregisterWinService $(var.LibertyServerName)'
@@ -130,17 +194,33 @@
                   Impersonate="no"
                   Return="ignore" />
 
+    <!-- ============================================================ -->
+    <!-- Sequencing                                                    -->
+    <!-- ============================================================ -->
     <InstallExecuteSequence>
-      <!-- Register on first install and on major-upgrade install. -->
-      <Custom Action="SetRegisterWinService" After="InstallFiles">
+      <!-- Install: write config, register service, configure it.      -->
+      <Custom Action="SetWriteBootstrapProps" After="InstallFiles">
+        NOT Installed OR UPGRADINGPRODUCTCODE
+      </Custom>
+      <Custom Action="WriteBootstrapProps" After="SetWriteBootstrapProps">
+        NOT Installed OR UPGRADINGPRODUCTCODE
+      </Custom>
+
+      <Custom Action="SetRegisterWinService" After="WriteBootstrapProps">
         NOT Installed OR UPGRADINGPRODUCTCODE
       </Custom>
       <Custom Action="RegisterWinService" After="SetRegisterWinService">
         NOT Installed OR UPGRADINGPRODUCTCODE
       </Custom>
 
-      <!-- Unregister on uninstall and on the uninstall half of a major
-           upgrade. Schedule before RemoveFiles so server.bat still exists. -->
+      <Custom Action="SetConfigureWinService" After="RegisterWinService">
+        NOT Installed OR UPGRADINGPRODUCTCODE
+      </Custom>
+      <Custom Action="ConfigureWinService" After="SetConfigureWinService">
+        NOT Installed OR UPGRADINGPRODUCTCODE
+      </Custom>
+
+      <!-- Uninstall: unregister before files are removed.             -->
       <Custom Action="SetUnregisterWinService" Before="RemoveFiles">
         (REMOVE="ALL") OR (WIX_UPGRADE_DETECTED AND NOT UPGRADINGPRODUCTCODE)
       </Custom>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Placeholder server.xml shipped by the installer.
+  Replace this with your actual Liberty server configuration.
+
+  ${variable} references are resolved from bootstrap.properties,
+  which the installer writes at install time from the DB_HOST,
+  DB_PORT, DB_USER, and DB_PASSWORD MSI properties.
+-->
+<server description="Liberty Server">
+
+    <!-- Enable features as required by your application -->
+    <featureManager>
+        <feature>jakartaee-10.0</feature>
+    </featureManager>
+
+    <!-- HTTP endpoint - uncomment and configure if needed.
+         The installer does NOT open firewall ports; do that
+         separately if you expose HTTP/HTTPS.
+    <httpEndpoint id="defaultHttpEndpoint"
+                  host="*"
+                  httpPort="9080"
+                  httpsPort="9443" />
+    -->
+
+    <!-- Database configuration.
+         Values come from bootstrap.properties written at install time. -->
+    <dataSource id="DefaultDataSource" jndiName="jdbc/defaultDS">
+        <jdbcDriver libraryRef="DBLib" />
+        <properties serverName="${db.serverName}"
+                    portNumber="${db.portNumber}"
+                    user="${db.user}"
+                    password="${db.password}" />
+    </dataSource>
+
+    <library id="DBLib">
+        <fileset dir="${server.config.dir}/jdbc" includes="*.jar" />
+    </library>
+
+</server>
