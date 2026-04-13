@@ -57,6 +57,18 @@
     </Condition>
 
     <!-- ============================================================ -->
+    <!-- Product icon                                                  -->
+    <!--                                                               -->
+    <!-- Shown in Control Panel > Programs and Features, and in any    -->
+    <!-- shortcuts.  Place your .ico in the installer\ directory       -->
+    <!-- alongside Product.wxs (light finds it via -b bindpath).       -->
+    <!-- The .ico should contain 16x16, 32x32, 48x48, and 256x256     -->
+    <!-- layers for crisp display at every DPI.                        -->
+    <!-- ============================================================ -->
+    <Icon Id="app.ico" SourceFile="app.ico" />
+    <Property Id="ARPPRODUCTICON" Value="app.ico" />
+
+    <!-- ============================================================ -->
     <!-- Public properties                                             -->
     <!--                                                               -->
     <!-- All uppercase + Secure="yes" so they can be overridden on the -->
